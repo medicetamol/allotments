@@ -1,0 +1,13 @@
+{
+  "v": 1,
+  "default": "2026-r1",
+  "rounds": [
+    {
+      "id": "2026-r1",
+      "label": "NEET-PG 2026 \u00b7 Round 1",
+      "year": 2026,
+      "round": 1,
+      "file": "2026-r1.json"
+    }
+  ]
+}
