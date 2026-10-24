@@ -13,20 +13,22 @@ Served by GitHub Pages at `https://medicetamol.github.io/allotments/rounds/`.
   "rounds": [ { "id": "2026-r1", "label": "NEET-PG 2026 · Round 1", "year": 2026, "round": 1, "file": "2026-r1.json" } ] }
 ```
 
-## `rounds/<id>.json` (schema v1)
+## `rounds/<id>.json` (schema v2)
 Lookup tables are lists; every row stores only indexes into them, which keeps the file small.
 ```json
 {
-  "v": 1,
+  "v": 2,
   "meta":    { "id": "2026-r1", "label": "NEET-PG 2026 · Round 1", "exam": "NEET-PG", "year": 2026, "round": 1,
                "total": 28723, "source": "...", "updated": "2026-10-23" },
   "quotas":  ["All India", "DNB Quota", "..."],
+  "states":  ["Delhi", "Tamil Nadu", "..."],
   "cats":    ["Open", "OBC", "EWS", "SC", "ST", "Open PwD", "..."],      // seat category allotted
   "ccats":   ["General", "OBC", "EWS", "SC", "ST", "General PwD", "..."], // candidate's own category
   "courses": [["MD", "General Medicine"], ["MS", "General Surgery"], ["DNB", "Anaesthesiology"]],  // [course type, branch]
-  "insts":   [["College display name, City", "address / extra text used for search"]],
+  "insts":   [["College display name, City, State", "full address text (search only, not shown)", stateIdx]],
   "rows":    [[rank, quotaIdx, instIdx, courseIdx, catIdx, ccatIdx]]       // sorted by rank, ascending
 }
 ```
-Rules: `rank` is an integer; the five indexes point into `quotas`, `insts`, `courses`, `cats`, `ccats`
-(0-based). Course types in use: `MD, MS, DNB, DrNB (6-yr), M.Ch, DNB Diploma, Diploma`.
+Rules: `rank` is an integer; the five row indexes point into `quotas`, `insts`, `courses`, `cats`, `ccats`
+(0-based); `stateIdx` points into `states`. Course types in use: `MD, MS, DNB, DrNB (6-yr), M.Ch, DNB Diploma, Diploma`.
+The page also reads v1 files (no `states`); the State filter simply hides itself for them.
