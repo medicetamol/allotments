@@ -4,10 +4,17 @@ Data for the mediCetamol seat-allotment page (`/allotment/` on the main site).
 Served by GitHub Pages: `https://medicetamol.github.io/allotments/`
 
 ```
+app.js                 the allotment tool (loaded by the /allotment page of the main site)
+app.css                its styles (every rule is scoped to #al-root)
 colleges.json          master list of colleges (one entry per real college, shared by every round)
 rounds/index.json      list of rounds shown in the page's dropdown
 rounds/<year>-r<n>.json  one file per round (schema v4)
 ```
+
+The main site (React) only has a small page, `src/pages/Allotments.tsx`, that loads `app.js` and `app.css`
+from this repo. To change how the tool works, edit `app.js` / `app.css` here and push. GitHub Pages
+caches files for about 10 minutes. `app.js` finds `colleges.json` and `rounds/` next to itself, so nothing
+needs to change when the site moves to a custom domain.
 
 ## Add a new round
 1. Add `rounds/<year>-r<n>.json`.
