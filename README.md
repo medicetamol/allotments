@@ -16,6 +16,13 @@ from this repo. To change how the tool works, edit `app.js` / `app.css` here and
 caches files for about 10 minutes. `app.js` finds `colleges.json` and `rounds/` next to itself, so nothing
 needs to change when the site moves to a custom domain.
 
+## Exams
+`rounds/index.json` entries carry an `"exam"` (`"NEET-PG"` or `"WB-PG"`). The page groups its round dropdown by
+exam, and uses the round file's `meta.exam` for wording (NEET-PG rank = all-India rank, other exams = rank in that
+counselling's merit list). West Bengal files use their own quotas (Open Quota, Private Management Quota,
+In-service Quota, In-service DNB Quota, NRI Quota) and categories (OBC-A, OBC-B); the page builds its category
+columns from the categories found in the round file.
+
 ## Add a new round
 1. Add `rounds/<year>-r<n>.json`.
 2. Add one entry to `rounds/index.json` (set `default` if it should open first).

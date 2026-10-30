@@ -40,13 +40,11 @@
     <!-- My rank panel -->
     <section class="card my" id="myPanel" hidden>
       <h2>Which seats could my rank reach?</h2>
-      <p>Enter your NEET-PG rank and category. You will see seats whose last allotted rank was at or beyond yours.</p>
+      <p id="myIntro">Enter your NEET-PG rank and category. You will see seats whose last allotted rank was at or beyond yours.</p>
       <div class="my-grid">
         <div class="field"><label for="myRank">Your rank</label><input class="ctl" id="myRank" type="text" inputmode="numeric" autocomplete="off" placeholder="e.g. 12500" /></div>
         <div class="field"><label for="myCat">Your category</label>
-          <select class="ctl" id="myCat">
-            <option value="General">General / Open</option><option value="EWS">EWS</option><option value="OBC">OBC</option><option value="SC">SC</option><option value="ST">ST</option>
-          </select></div>
+          <select class="ctl" id="myCat"></select></div>
         <label class="check"><input type="checkbox" id="myPwd" /> PwD</label>
       </div>
     </section>
@@ -109,10 +107,13 @@
   var onWin = function (type, fn) { window.addEventListener(type, fn); cleanups.push(function () { window.removeEventListener(type, fn); }); };
 
   var PAGE = 50;
+  var EXAM_NAMES = { "NEET-PG": "NEET-PG (MCC counselling)", "WB-PG": "West Bengal PG counselling" };
+  var BASE_CATS = ["Open", "EWS", "OBC", "OBC-A", "OBC-B", "SC", "ST"];
   var QUOTA_SHORT = {
     "Non-Resident Indian": "NRI", "IP University Quota": "IP Univ", "Delhi University Quota": "DU",
     "DNB Quota": "DNB", "Aligarh Muslim University": "AMU", "Banaras Hindu University": "BHU",
-    "Self-Financed Merit Seat": "Self-financed", "Armed Forces Medical": "Armed Forces", "Muslim Minority Quota": "Muslim Minority", "Jain Minority Quota": "Jain Minority"
+    "Self-Financed Merit Seat": "Self-financed", "Armed Forces Medical": "Armed Forces",
+    "Open Quota": "Open quota", "Private Management Quota": "Private Mgmt", "In-service Quota": "In-service", "In-service DNB Quota": "In-service DNB", "NRI Quota": "NRI", "Muslim Minority Quota": "Muslim Minority", "Jain Minority Quota": "Jain Minority"
   };
   var SORTS = {
     list: [["rank", "Rank: best first"], ["rank-d", "Rank: last first"], ["college", "College A–Z"], ["course", "Branch A–Z"]],
@@ -177,7 +178,11 @@
     (SHARED.index ? Promise.resolve(SHARED.index) : getJSON("index.json").then(function (i) { SHARED.index = i; return i; })).then(function (idx) {
       S.index = idx;
       var sel = $("#roundSel");
-      sel.innerHTML = idx.rounds.map(function (r) { return '<option value="' + esc(r.id) + '">' + esc(r.label) + "</option>"; }).join("");
+      var groups = {}, order = [], ropt = function (r) { return '<option value="' + esc(r.id) + '">' + esc(r.label) + "</option>"; };
+      idx.rounds.forEach(function (r) { var g = r.exam || "NEET-PG"; if (!groups[g]) { groups[g] = []; order.push(g); } groups[g].push(r); });
+      sel.innerHTML = order.length > 1
+        ? order.map(function (g) { return '<optgroup label="' + esc(EXAM_NAMES[g] || g) + '">' + groups[g].map(ropt).join("") + "</optgroup>"; }).join("")
+        : idx.rounds.map(ropt).join("");
       sel.disabled = idx.rounds.length < 2;
       var want = (location.hash || "").replace("#", "").split("&")[0];
       var pick = idx.rounds.some(function (r) { return r.id === want; }) ? want : (idx.default || idx.rounds[0].id);
@@ -226,9 +231,10 @@
     L.degrees = Array.from(new Set(d.courses.map(function (c) { return c[0]; }))).sort(function (a, b) {
       var x = order.indexOf(a), y = order.indexOf(b); return (x < 0 ? 99 : x) - (y < 0 ? 99 : y);
     });
-    var GOVQ = ["All India", "Delhi University Quota", "IP University Quota", "Banaras Hindu University", "Aligarh Muslim University", "Armed Forces Medical"];
-    var PVTQ = ["Self-Financed Merit Seat", "Non-Resident Indian", "Jain Minority Quota", "Muslim Minority Quota"];
-    L.qType = d.quotas.map(function (q) { return GOVQ.indexOf(q) >= 0 ? "gov" : PVTQ.indexOf(q) >= 0 ? "pvt" : q === "DNB Quota" ? "dnb" : ""; });
+    var GOVQ = ["All India", "Delhi University Quota", "IP University Quota", "Banaras Hindu University", "Aligarh Muslim University", "Armed Forces Medical", "Open Quota", "In-service Quota"];
+    var PVTQ = ["Self-Financed Merit Seat", "Non-Resident Indian", "Jain Minority Quota", "Muslim Minority Quota", "Private Management Quota", "NRI Quota"];
+    L.qType = d.quotas.map(function (q) { return GOVQ.indexOf(q) >= 0 ? "gov" : PVTQ.indexOf(q) >= 0 ? "pvt" : q === "DNB Quota" || q === "In-service DNB Quota" ? "dnb" : ""; });
+    L.baseCats = BASE_CATS.filter(function (c) { return d.cats.indexOf(c) >= 0 || d.cats.indexOf(c + " PwD") >= 0; });
     L.catIdx = {}; d.cats.forEach(function (c, i) { L.catIdx[c] = i; });
     S.L = L;
     resetFilters(true);
@@ -249,7 +255,7 @@
     msInit("msBranch", "All branches", L.branches.map(function (b) { return [b, b]; }), "branch");
     msInit("msDegree", "All course types", L.degrees.map(function (b) { return [b, b]; }), "degree");
     buildQuotaOptions();
-    var catOrder = ["Open", "OBC", "EWS", "SC", "ST"];
+    var catOrder = ["Open", "OBC", "OBC-A", "OBC-B", "EWS", "SC", "ST"];
     var cats = d.cats.map(function (c, i) { return [c, i]; }).sort(function (a, b) {
       var ba = a[0].replace(" PwD", ""), bb = b[0].replace(" PwD", "");
       var x = catOrder.indexOf(ba), y = catOrder.indexOf(bb);
@@ -257,6 +263,11 @@
     });
     $("#fCat").innerHTML = opt(-1, "All categories") + cats.map(function (c) { return opt(c[1], c[0] === "Open" ? "Open (General)" : c[0]); }).join("");
     $("#collegeList").innerHTML = Array.from(new Set(L.full)).sort().map(function (n) { return "<option value=\"" + esc(n) + "\"></option>"; }).join("");
+    var mc = $("#myCat");
+    mc.innerHTML = '<option value="General">General / Open</option>' + L.baseCats.filter(function (c) { return c !== "Open"; }).map(function (c) { return '<option value="' + esc(c) + '">' + esc(c) + "</option>"; }).join("");
+    if (!L.baseCats.some(function (c) { return c === S.my.cat; })) S.my.cat = "General";
+    mc.value = S.my.cat;
+    $("#myIntro").textContent = (d.meta && d.meta.exam && d.meta.exam !== "NEET-PG" ? "Enter your rank from this counselling’s merit list and your category." : "Enter your NEET-PG rank and category.") + " You will see seats whose last allotted rank was at or beyond yours.";
     $("#q").value = ""; $("#fCollege").value = ""; $("#fFrom").value = ""; $("#fTo").value = "";
     $("#fState").value = -1; $("#fType").value = ""; $("#fCat").value = -1;
   }
@@ -420,7 +431,7 @@
   /* ---- rendering ---- */
   function catChip(name) {
     var base = name.replace(" PwD", "").toLowerCase();
-    var cls = { open: "c-open", obc: "c-obc", ews: "c-ews", sc: "c-sc", st: "c-st" }[base] || "";
+    var cls = { open: "c-open", obc: "c-obc", "obc-a": "c-obc", "obc-b": "c-obc", ews: "c-ews", sc: "c-sc", st: "c-st" }[base] || "";
     return '<span class="chip ' + cls + '">' + esc(name === "Open" ? "Open" : name) + "</span>";
   }
   function qChip(i) { var q = S.data.quotas[i]; return '<span class="chip">' + esc(QUOTA_SHORT[q] || q) + "</span>"; }
@@ -463,7 +474,6 @@
   }
 
   /* ---- summary table ---- */
-  var SUMCOLS = ["Open", "EWS", "OBC", "SC", "ST"];
   function summarize() {
     var f = S.f;
     var rows = filteredRows({ rank: false, anyCat: true });
@@ -518,13 +528,13 @@
     h.addEventListener("scroll", function () { if (lock) { lock = false; return; } if (b.scrollLeft !== h.scrollLeft) { lock = true; b.scrollLeft = h.scrollLeft; } });
   }
   function summaryTable(list, sm) {
-    var d = S.data, L = S.L, cols = SUMCOLS.slice(), stateSel = S.f.state >= 0;
-    if (S.sum.pwd) cols = cols.concat(SUMCOLS.map(function (c) { return c + " PwD"; }));
+    var d = S.data, L = S.L, cols = L.baseCats.slice(), stateSel = S.f.state >= 0, nb = cols.length;
+    if (S.sum.pwd) cols = cols.concat(L.baseCats.map(function (c) { return c + " PwD"; }));
     var maxRank = 1;
     sm.groups.forEach(function (g) { for (var c in g.cells) if (g.cells[c].max > maxRank) maxRank = g.cells[c].max; });
     var colgroup = '<colgroup><col class="c-first">' + cols.map(function () { return '<col class="c-cat">'; }).join("") + '<col class="c-seats"></colgroup>';
     var head = '<tr><th class="stick">' + (sm.mode === "branch" ? "Branch" : "College") + "</th>" + cols.map(function (c, i) {
-      return '<th class="' + (S.sum.pwd && i === 5 ? "gap" : "") + '">' + esc(c.replace(" PwD", "")) + (c.indexOf("PwD") > 0 ? "<small>PwD</small>" : "") + "</th>";
+      return '<th class="' + (S.sum.pwd && i === nb ? "gap" : "") + '">' + esc(c.replace(" PwD", "")) + (c.indexOf("PwD") > 0 ? "<small>PwD</small>" : "") + "</th>";
     }).join("") + '<th class="gap">Seats</th></tr>';
     var body = list.map(function (g) {
       var first, qc = S.f.quota.length !== 1 ? ' <span class="chip c-open">' + esc(QUOTA_SHORT[d.quotas[g.q]] || d.quotas[g.q]) + "</span>" : "";
@@ -534,7 +544,7 @@
         first = '<div class="cn">' + esc(stateSel ? L.lblState[g.i] : L.lblNo[g.i]) + '</div><div class="cl">' + esc(L.courseLabel[g.c]) + qc + "</div>";
       }
       var tds = cols.map(function (c, i) {
-        var ci = L.catIdx[c], cell = ci === undefined ? null : g.cells[ci], gap = S.sum.pwd && i === 5 ? "gap" : "";
+        var ci = L.catIdx[c], cell = ci === undefined ? null : g.cells[ci], gap = S.sum.pwd && i === nb ? "gap" : "";
         if (!cell) return '<td class="nil ' + gap + '">–</td>';
         var a = (0.07 + 0.27 * (1 - Math.sqrt(cell.max / maxRank))).toFixed(3);
         return '<td class="' + gap + '" style="background:rgb(var(--accent) / ' + a + ')"><b>' + fmt(cell.max) + "</b><small>" + fmt(cell.n) + " seat" + (cell.n > 1 ? "s" : "") + "</small></td>";
@@ -578,7 +588,7 @@
       list = rows.slice(0, S.shown);
       html = list.length ? listHead() + '<div class="list">' + list.map(listRow).join("") + "</div>" : "";
       $("#count").innerHTML = "<b>" + fmt(total) + "</b> allotment" + (total === 1 ? "" : "s");
-      extraNote = "Rank is the NEET-PG all-India rank. Seat is the category of the seat that was allotted; Candidate is the student’s own category.";
+      extraNote = (S.data.meta && S.data.meta.exam && S.data.meta.exam !== "NEET-PG" ? "Rank is the rank in this counselling’s merit list. " : "Rank is the NEET-PG all-India rank. ") + "Seat is the category of the seat that was allotted; Candidate is the student’s own category.";
     } else if (tab === "summary") {
       var sm = summarize();
       var showG = S.f.state >= 0 && S.f.branch.length !== 1;
