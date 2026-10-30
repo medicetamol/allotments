@@ -267,7 +267,7 @@
     mc.innerHTML = '<option value="General">General / Open</option>' + L.baseCats.filter(function (c) { return c !== "Open"; }).map(function (c) { return '<option value="' + esc(c) + '">' + esc(c) + "</option>"; }).join("");
     if (!L.baseCats.some(function (c) { return c === S.my.cat; })) S.my.cat = "General";
     mc.value = S.my.cat;
-    $("#myIntro").textContent = (d.meta && d.meta.exam && d.meta.exam !== "NEET-PG" ? "Enter your rank from this counselling’s merit list and your category." : "Enter your NEET-PG rank and category.") + " You will see seats whose last allotted rank was at or beyond yours.";
+    $("#myIntro").textContent = "Enter your NEET-PG all-India rank and category." + " You will see seats whose last allotted rank was at or beyond yours.";
     $("#q").value = ""; $("#fCollege").value = ""; $("#fFrom").value = ""; $("#fTo").value = "";
     $("#fState").value = -1; $("#fType").value = ""; $("#fCat").value = -1;
   }
@@ -588,7 +588,7 @@
       list = rows.slice(0, S.shown);
       html = list.length ? listHead() + '<div class="list">' + list.map(listRow).join("") + "</div>" : "";
       $("#count").innerHTML = "<b>" + fmt(total) + "</b> allotment" + (total === 1 ? "" : "s");
-      extraNote = (S.data.meta && S.data.meta.exam && S.data.meta.exam !== "NEET-PG" ? "Rank is the rank in this counselling’s merit list. " : "Rank is the NEET-PG all-India rank. ") + "Seat is the category of the seat that was allotted; Candidate is the student’s own category.";
+      extraNote = "Rank is the NEET-PG all-India rank. " + "Seat is the category of the seat that was allotted; Candidate is the student’s own category.";
     } else if (tab === "summary") {
       var sm = summarize();
       var showG = S.f.state >= 0 && S.f.branch.length !== 1;
