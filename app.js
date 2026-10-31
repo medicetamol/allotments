@@ -507,8 +507,8 @@
   function summaryCaption(sm) {
     var f = S.f, d = S.data;
     var what = f.college.trim() ? f.college.trim() : ((f.degree.length ? f.degree.join("/") + " " : "") + (f.branch.length ? f.branch.join(", ") : "all branches"));
-    var where = f.college.trim() ? "" : (f.state >= 0 ? " in " + d.states[f.state] : " across India");
-    var q = !f.quota.length ? "all quotas (shown separately)" : f.quota.length === 1 ? d.quotas[f.quota[0]] + " quota" : f.quota.map(function (i) { return d.quotas[i]; }).join(", ") + " (shown separately)";
+    var where = f.college.trim() ? "" : (f.state >= 0 ? " in " + d.states[f.state] : (d.states.length === 1 ? " in " + d.states[0] : " across India"));
+    var q = !f.quota.length ? "all quotas (shown separately)" : f.quota.length === 1 ? (/quota$/i.test(d.quotas[f.quota[0]]) ? d.quotas[f.quota[0]] : d.quotas[f.quota[0]] + " quota") : f.quota.map(function (i) { return d.quotas[i]; }).join(", ") + " (shown separately)";
     if (f.stype) q += " · " + ({ gov: "Government", pvt: "Private / Deemed", dnb: "DNB" })[f.stype] + " seats";
     var s = f.q.trim() ? " matching “" + f.q.trim() + "”" : "";
     return "Showing closing ranks of <b>" + esc(what) + "</b>" + esc(where) + esc(s) + " · " + esc(q);
